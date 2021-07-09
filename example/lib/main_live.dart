@@ -1,4 +1,4 @@
-import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:google_ml_vision/google_ml_vision.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_camera_ml_vision/flutter_camera_ml_vision.dart';
 
@@ -29,7 +29,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<String> data = [];
   final _scanKey = GlobalKey<CameraMlVisionState>();
-  BarcodeDetector detector = FirebaseVision.instance.barcodeDetector();
+  BarcodeDetector detector = GoogleVision.instance.barcodeDetector();
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
             detector: detector.detectInImage,
             resolution: ResolutionPreset.high,
             onResult: (barcodes) {
-              if (barcodes == null ||
-                  barcodes.isEmpty ||
-                  data.contains(barcodes.first.displayValue) ||
-                  !mounted) {
+              if (barcodes == null || barcodes.isEmpty || data.contains(barcodes.first.displayValue) || !mounted) {
                 return;
               }
               setState(() {
@@ -93,8 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => _SecondScreen()));
+                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => _SecondScreen()));
                       },
                       child: Text('Push new route'),
                     ),

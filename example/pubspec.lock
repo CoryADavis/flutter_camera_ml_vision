@@ -7,7 +7,7 @@ packages:
       name: async
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.5.0"
+    version: "2.6.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -127,13 +127,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.2"
-  firebase_ml_vision:
-    dependency: transitive
-    description:
-      name: firebase_ml_vision
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.12.0+1"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -145,7 +138,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "3.0.0+1"
+    version: "3.0.1"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -156,6 +149,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  google_ml_vision:
+    dependency: transitive
+    description:
+      name: google_ml_vision
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.6"
   js:
     dependency: transitive
     description:
@@ -265,7 +265,7 @@ packages:
       name: source_span
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.8.0"
+    version: "1.8.1"
   stack_trace:
     dependency: transitive
     description:
@@ -307,7 +307,7 @@ packages:
       name: test_api
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.19"
+    version: "0.3.0"
   typed_data:
     dependency: transitive
     description:

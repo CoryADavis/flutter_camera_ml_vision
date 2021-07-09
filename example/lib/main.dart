@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:google_ml_vision/google_ml_vision.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_camera_ml_vision/flutter_camera_ml_vision.dart';
 
@@ -78,7 +78,7 @@ class ScanPage extends StatefulWidget {
 
 class _ScanPageState extends State<ScanPage> {
   bool resultSent = false;
-  BarcodeDetector detector = FirebaseVision.instance.barcodeDetector();
+  BarcodeDetector detector = GoogleVision.instance.barcodeDetector();
 
   @override
   Widget build(BuildContext context) {
@@ -99,10 +99,7 @@ class _ScanPageState extends State<ScanPage> {
             },
             detector: detector.detectInImage,
             onResult: (List<Barcode> barcodes) {
-              if (!mounted ||
-                  resultSent ||
-                  barcodes == null ||
-                  barcodes.isEmpty) {
+              if (!mounted || resultSent || barcodes == null || barcodes.isEmpty) {
                 return;
               }
               resultSent = true;
@@ -179,26 +176,21 @@ class _ScannerOverlayShape extends ShapeBorder {
 
     canvas
       ..drawRect(
-        Rect.fromLTRB(
-            rect.left, rect.top, rect.right, borderSize.height + rect.top),
+        Rect.fromLTRB(rect.left, rect.top, rect.right, borderSize.height + rect.top),
         paint,
       )
       ..drawRect(
-        Rect.fromLTRB(rect.left, rect.bottom - borderSize.height, rect.right,
-            rect.bottom),
-        paint,
-      )
-      ..drawRect(
-        Rect.fromLTRB(rect.left, rect.top + borderSize.height,
-            rect.left + borderSize.width, rect.bottom - borderSize.height),
+        Rect.fromLTRB(rect.left, rect.bottom - borderSize.height, rect.right, rect.bottom),
         paint,
       )
       ..drawRect(
         Rect.fromLTRB(
-            rect.right - borderSize.width,
-            rect.top + borderSize.height,
-            rect.right,
-            rect.bottom - borderSize.height),
+            rect.left, rect.top + borderSize.height, rect.left + borderSize.width, rect.bottom - borderSize.height),
+        paint,
+      )
+      ..drawRect(
+        Rect.fromLTRB(
+            rect.right - borderSize.width, rect.top + borderSize.height, rect.right, rect.bottom - borderSize.height),
         paint,
       );
 
@@ -208,11 +200,8 @@ class _ScannerOverlayShape extends ShapeBorder {
       ..strokeWidth = borderWidth;
 
     final borderOffset = borderWidth / 2;
-    final realReact = Rect.fromLTRB(
-        borderSize.width + borderOffset,
-        borderSize.height + borderOffset + rect.top,
-        width - borderSize.width - borderOffset,
-        height - borderSize.height - borderOffset + rect.top);
+    final realReact = Rect.fromLTRB(borderSize.width + borderOffset, borderSize.height + borderOffset + rect.top,
+        width - borderSize.width - borderOffset, height - borderSize.height - borderOffset + rect.top);
 
     //Draw top right corner
     canvas

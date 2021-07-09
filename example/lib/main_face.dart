@@ -1,5 +1,5 @@
 import 'package:camera/camera.dart';
-import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:google_ml_vision/google_ml_vision.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_camera_ml_vision/flutter_camera_ml_vision.dart';
 
@@ -31,8 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Face> _faces = [];
   final _scanKey = GlobalKey<CameraMlVisionState>();
   CameraLensDirection cameraLensDirection = CameraLensDirection.front;
-  FaceDetector detector =
-      FirebaseVision.instance.faceDetector(FaceDetectorOptions(
+  FaceDetector detector = GoogleVision.instance.faceDetector(FaceDetectorOptions(
     enableTracking: true,
     mode: FaceDetectorMode.accurate,
   ));
@@ -50,8 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
           detector: detector.processImage,
           overlayBuilder: (c) {
             return CustomPaint(
-              painter: FaceDetectorPainter(
-                  _scanKey.currentState.cameraValue.previewSize.flipped, _faces,
+              painter: FaceDetectorPainter(_scanKey.currentState.cameraValue.previewSize.flipped, _faces,
                   reflection: cameraLensDirection == CameraLensDirection.front),
             );
           },
@@ -87,8 +85,7 @@ class FaceDetectorPainter extends CustomPainter {
       ..color = Colors.red;
 
     for (final face in faces) {
-      final faceRect =
-          _reflectionRect(reflection, face.boundingBox, imageSize.width);
+      final faceRect = _reflectionRect(reflection, face.boundingBox, imageSize.width);
       canvas.drawRect(
         _scaleRect(
           rect: faceRect,

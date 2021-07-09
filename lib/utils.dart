@@ -12,17 +12,17 @@ Uint8List _concatenatePlanes(List<Plane> planes) {
   return allBytes.done().buffer.asUint8List();
 }
 
-FirebaseVisionImageMetadata buildMetaData(
+GoogleVisionImageMetadata buildMetaData(
   CameraImage image,
   ImageRotation rotation,
 ) {
-  return FirebaseVisionImageMetadata(
+  return GoogleVisionImageMetadata(
     rawFormat: image.format.raw,
     size: Size(image.width.toDouble(), image.height.toDouble()),
     rotation: rotation,
     planeData: image.planes
         .map(
-          (plane) => FirebaseVisionImagePlaneMetadata(
+          (plane) => GoogleVisionImagePlaneMetadata(
             bytesPerRow: plane.bytesPerRow,
             height: plane.height,
             width: plane.width,
@@ -38,7 +38,7 @@ Future<T> _detect<T>(
   ImageRotation rotation,
 ) async {
   return handleDetection(
-    FirebaseVisionImage.fromBytes(
+    GoogleVisionImage.fromBytes(
       _concatenatePlanes(image.planes),
       buildMetaData(image, rotation),
     ),

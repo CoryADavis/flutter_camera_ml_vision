@@ -8,7 +8,7 @@ import 'dart:ui';
 import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
 import 'package:device_info/device_info.dart';
-import 'package:firebase_ml_vision/firebase_ml_vision.dart';
+import 'package:google_ml_vision/google_ml_vision.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,9 +18,8 @@ export 'package:camera/camera.dart';
 
 part 'utils.dart';
 
-typedef HandleDetection<T> = Future<T> Function(FirebaseVisionImage image);
-typedef ErrorWidgetBuilder = Widget Function(
-    BuildContext context, CameraError error);
+typedef HandleDetection<T> = Future<T> Function(GoogleVisionImage image);
+typedef ErrorWidgetBuilder = Widget Function(BuildContext context, CameraError error);
 
 enum CameraError {
   unknown,
@@ -61,8 +60,7 @@ class CameraMlVision<T> extends StatefulWidget {
   CameraMlVisionState createState() => CameraMlVisionState<T>();
 }
 
-class CameraMlVisionState<T> extends State<CameraMlVision<T>>
-    with WidgetsBindingObserver {
+class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindingObserver {
   XFile? _lastImage;
   final _visibilityKey = UniqueKey();
   CameraController? _cameraController;
@@ -151,8 +149,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>>
 
   ImageRotation? get imageRotation => _rotation;
 
-  Future<void> Function() get prepareForVideoRecording =>
-      _cameraController!.prepareForVideoRecording;
+  Future<void> Function() get prepareForVideoRecording => _cameraController!.prepareForVideoRecording;
 
   Future<void> startVideoRecording() async {
     await _cameraController!.stopImageStream();
@@ -308,9 +305,8 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>>
           cameraPreview,
           (cameraController?.value.isInitialized ?? false)
               ? AspectRatio(
-                  aspectRatio: _isLandscape()
-                      ? cameraController!.value.aspectRatio
-                      : (1 / cameraController!.value.aspectRatio),
+                  aspectRatio:
+                      _isLandscape() ? cameraController!.value.aspectRatio : (1 / cameraController!.value.aspectRatio),
                   child: widget.overlayBuilder!(context),
                 )
               : Container(),
@@ -337,21 +333,18 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>>
   DeviceOrientation? _getApplicableOrientation() {
     return (cameraController?.value.isRecordingVideo ?? false)
         ? cameraController?.value.recordingOrientation
-        : (cameraController?.value.lockedCaptureOrientation ??
-            cameraController?.value.deviceOrientation);
+        : (cameraController?.value.lockedCaptureOrientation ?? cameraController?.value.deviceOrientation);
   }
 
   bool _isLandscape() {
-    return [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
-        .contains(_getApplicableOrientation());
+    return [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight].contains(_getApplicableOrientation());
   }
 
   void _processImage(CameraImage cameraImage) async {
     if (!_alreadyCheckingImage && mounted) {
       _alreadyCheckingImage = true;
       try {
-        final results =
-            await _detect<T>(cameraImage, widget.detector, _rotation!);
+        final results = await _detect<T>(cameraImage, widget.detector, _rotation!);
         widget.onResult(results);
       } catch (ex, stack) {
         debugPrint('$ex, $stack');
