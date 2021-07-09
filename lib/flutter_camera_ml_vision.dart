@@ -292,6 +292,14 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
           : widget.errorBuilder!(context, _cameraError);
     }
 
+    final size = MediaQuery.of(context).size;
+    final cameraAspectRatio = _cameraController!.value.isInitialized ? _cameraController!.value.aspectRatio : 1;
+    var scale = size.aspectRatio * cameraAspectRatio;
+
+    if (scale < 1) {
+      scale = 1 / scale;
+    }
+
     var cameraPreview = _isStreaming
         ? CameraPreview(
             _cameraController!,
@@ -326,7 +334,12 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
         }
       },
       key: _visibilityKey,
-      child: cameraPreview,
+      child: Container(
+        child: Transform.scale(
+          scale: scale,
+          child: Center(child: cameraPreview),
+        ),
+      ),
     );
   }
 
