@@ -3,7 +3,6 @@ library flutter_camera_ml_vision;
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
@@ -70,6 +69,8 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   bool _alreadyCheckingImage = false;
   bool _isStreaming = false;
   bool _isDeactivate = false;
+
+  var _opacity = 0.0;
 
   @override
   void initState() {
@@ -203,8 +204,8 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     if (Platform.isAndroid) {
       final deviceInfo = DeviceInfoPlugin();
       final androidInfo = await deviceInfo.androidInfo;
-      if (androidInfo.version.sdkInt < 21) {
-        debugPrint('Camera plugin doesn\'t support android under version 21');
+      if (androidInfo.version.sdkInt < 24) {
+        debugPrint('Camera plugin doesn\'t support android under version 24');
         if (mounted) {
           setState(() {
             _cameraMlVisionState = _CameraState.error;
@@ -261,7 +262,11 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     );
 
     //FIXME hacky technique to avoid having black screen on some android devices
-    await Future.delayed(Duration(milliseconds: 200));
+    if (Platform.isAndroid) {
+      await Future.delayed(Duration(milliseconds: 50));
+    } else {
+      await Future.delayed(Duration(milliseconds: 50));
+    }
     start();
   }
 
@@ -280,47 +285,23 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    debugPrint('Dependencies Changed!');
+
+    Future.delayed(const Duration(milliseconds: 60), () {
+      setState(() => _opacity = 1.0);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (_cameraMlVisionState == _CameraState.loading) {
-      return widget.loadingBuilder == null
-          ? Center(child: CircularProgressIndicator())
-          : widget.loadingBuilder!(context);
-    }
-    if (_cameraMlVisionState == _CameraState.error) {
-      return widget.errorBuilder == null
-          ? Center(child: Text('$_cameraMlVisionState $_cameraError'))
-          : widget.errorBuilder!(context, _cameraError);
-    }
-
-    final size = MediaQuery.of(context).size;
-    final cameraAspectRatio = _cameraController!.value.isInitialized ? _cameraController!.value.aspectRatio : 1;
-    var scale = size.aspectRatio * cameraAspectRatio;
-
-    if (scale < 1) {
-      scale = 1 / scale;
-    }
-
     var cameraPreview = _isStreaming
         ? CameraPreview(
             _cameraController!,
           )
         : _getPicture();
 
-    if (widget.overlayBuilder != null) {
-      cameraPreview = Stack(
-        fit: StackFit.passthrough,
-        children: [
-          cameraPreview,
-          (cameraController?.value.isInitialized ?? false)
-              ? AspectRatio(
-                  aspectRatio:
-                      _isLandscape() ? cameraController!.value.aspectRatio : (1 / cameraController!.value.aspectRatio),
-                  child: widget.overlayBuilder!(context),
-                )
-              : Container(),
-        ],
-      );
-    }
     return VisibilityDetector(
       onVisibilityChanged: (VisibilityInfo info) {
         if (info.visibleFraction == 0) {
@@ -335,22 +316,11 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       },
       key: _visibilityKey,
       child: Container(
-        child: Transform.scale(
-          scale: scale,
-          child: Center(child: cameraPreview),
+        child: Center(
+          child: previewWrapper(cameraPreview),
         ),
       ),
     );
-  }
-
-  DeviceOrientation? _getApplicableOrientation() {
-    return (cameraController?.value.isRecordingVideo ?? false)
-        ? cameraController?.value.recordingOrientation
-        : (cameraController?.value.lockedCaptureOrientation ?? cameraController?.value.deviceOrientation);
-  }
-
-  bool _isLandscape() {
-    return [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight].contains(_getApplicableOrientation());
   }
 
   void _processImage(CameraImage cameraImage) async {
@@ -379,5 +349,37 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       return Image.file(File(_lastImage!.path));
     }
     return Container();
+  }
+
+  Widget previewWrapper(Widget cameraPreview) {
+    return ColoredBox(
+      color: Colors.black,
+      child: AnimatedOpacity(
+        opacity: _opacity,
+        duration: const Duration(milliseconds: 300),
+        child: _cameraMlVisionState == _CameraState.error
+            ? widget.errorBuilder == null
+                ? Center(child: Text('$_cameraMlVisionState $_cameraError'))
+                : widget.errorBuilder!(context, _cameraError)
+            : Stack(
+                fit: StackFit.expand,
+                children: [
+                  _buildPreview(cameraPreview),
+                  (cameraController?.value.isInitialized ?? false)
+                      ? widget.overlayBuilder != null
+                          ? widget.overlayBuilder!(context)
+                          : Container()
+                      : Container(),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildPreview(Widget cameraPreview) {
+    return FittedBox(
+      fit: BoxFit.cover,
+      child: SizedBox(width: 720.0, height: 1280.0, child: cameraPreview),
+    );
   }
 }
