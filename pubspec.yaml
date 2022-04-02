@@ -3,6 +3,7 @@ description: A flutter widget that show the camera stream and allow ML vision re
 version: 3.0.1
 repository: https://github.com/rushio-consulting/flutter_camera_ml_vision
 homepage: https://github.com/rushio-consulting/flutter_camera_ml_vision
+publish_to: none
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -10,13 +11,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  google_ml_vision: ^0.0.6
-  firebase_core: ^1.1.0
-  visibility_detector: ^0.2.0
-  path_provider: ^2.0.1
-  pedantic: ^1.11.0
-  device_info: ^2.0.0
-  camera: ^0.8.1
+  google_ml_vision:
+    git:
+      url: https://github.com/CoryADavis/flutter_google_ml_vision.git
+      ref: barcode-only
+  firebase_core: ^1.14.0
+  visibility_detector: ^0.2.2
+  path_provider: ^2.0.9
+  pedantic: ^1.11.1
+  device_info: ^2.0.3
+  camera: ^0.9.4+18
   collection: ^1.15.0
 
 dev_dependencies:
