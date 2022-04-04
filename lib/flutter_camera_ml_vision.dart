@@ -94,7 +94,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       return;
     }
     if (state == AppLifecycleState.inactive) {
-      _stop(true).then((value) => _cameraController?.dispose());
+      _cameraController?.dispose();
     } else if (state == AppLifecycleState.resumed && _isStreaming) {
       _initialize();
     }
@@ -140,10 +140,12 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   }
 
   void _start() {
-    _cameraController!.startImageStream(_processImage);
-    setState(() {
-      _isStreaming = true;
-    });
+    if (_isStreaming != true) {
+      _cameraController!.startImageStream(_processImage);
+      setState(() {
+        _isStreaming = true;
+      });
+    }
   }
 
   CameraValue? get cameraValue => _cameraController?.value;
@@ -224,7 +226,6 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       return;
     }
     if (_cameraController != null) {
-      await _stop(true);
       await _cameraController?.dispose();
     }
     _cameraController = CameraController(
@@ -267,6 +268,10 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     } else {
       await Future.delayed(Duration(milliseconds: 50));
     }
+    if (!mounted) {
+      return;
+    }
+    _isStreaming = false;
     start();
   }
 
@@ -276,9 +281,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       widget.onDispose!();
     }
     if (_cameraController != null) {
-      _stop(true).then((value) {
-        _cameraController?.dispose();
-      });
+      _cameraController?.dispose();
     }
 
     super.dispose();
@@ -287,7 +290,6 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    debugPrint('Dependencies Changed!');
 
     Future.delayed(const Duration(milliseconds: 60), () {
       setState(() => _opacity = 1.0);
@@ -304,7 +306,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
 
     return VisibilityDetector(
       onVisibilityChanged: (VisibilityInfo info) {
-        if (info.visibleFraction == 0) {
+        if ((info.visibleFraction * 100) <= 5) {
           //invisible stop the streaming
           _isDeactivate = true;
           _stop(true);
@@ -364,7 +366,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
             : Stack(
                 fit: StackFit.expand,
                 children: [
-                  _buildPreview(cameraPreview),
+                  (cameraController?.value.isInitialized ?? false) ? _buildPreview(cameraPreview) : Container(),
                   (cameraController?.value.isInitialized ?? false)
                       ? widget.overlayBuilder != null
                           ? widget.overlayBuilder!(context)
