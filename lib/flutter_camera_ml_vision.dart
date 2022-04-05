@@ -42,6 +42,8 @@ class CameraMlVision<T> extends StatefulWidget {
   final CameraLensDirection cameraLensDirection;
   final ResolutionPreset? resolution;
   final Function? onDispose;
+  final Function? onInvisible;
+  final Function? onVisible;
 
   CameraMlVision({
     Key? key,
@@ -53,6 +55,8 @@ class CameraMlVision<T> extends StatefulWidget {
     this.cameraLensDirection = CameraLensDirection.back,
     this.resolution,
     this.onDispose,
+    this.onInvisible,
+    this.onVisible,
   }) : super(key: key);
 
   @override
@@ -60,7 +64,6 @@ class CameraMlVision<T> extends StatefulWidget {
 }
 
 class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindingObserver {
-  XFile? _lastImage;
   final _visibilityKey = UniqueKey();
   CameraController? _cameraController;
   ImageRotation? _rotation;
@@ -71,6 +74,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   bool _isDeactivate = false;
 
   var _opacity = 0.0;
+  var _counter = 0;
 
   @override
   void initState() {
@@ -94,23 +98,21 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       return;
     }
     if (state == AppLifecycleState.inactive) {
+      if (widget.onInvisible != null) {
+        widget.onInvisible!();
+      }
       _cameraController?.dispose();
     } else if (state == AppLifecycleState.resumed && _isStreaming) {
       _initialize();
+      if (widget.onVisible != null) {
+        widget.onVisible!();
+      }
     }
   }
 
   Future<void> stop() async {
     if (_cameraController != null) {
       await _stop(true);
-      try {
-        final image = await _cameraController!.takePicture();
-        setState(() {
-          _lastImage = image;
-        });
-      } on PlatformException catch (e) {
-        debugPrint('$e');
-      }
     }
   }
 
@@ -166,13 +168,6 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   }
 
   CameraController? get cameraController => _cameraController;
-
-  Future<XFile> takePicture(String path) async {
-    await _stop(true);
-    final image = await _cameraController!.takePicture();
-    _start();
-    return image;
-  }
 
   Future<void> flash(FlashMode mode) async {
     await _cameraController!.setFlashMode(mode);
@@ -302,18 +297,25 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
         ? CameraPreview(
             _cameraController!,
           )
-        : _getPicture();
+        : Container(color: Colors.black);
 
     return VisibilityDetector(
       onVisibilityChanged: (VisibilityInfo info) {
         if ((info.visibleFraction * 100) <= 5) {
           //invisible stop the streaming
           _isDeactivate = true;
+          _cameraController!.setFlashMode(FlashMode.off);
+          if (widget.onInvisible != null) {
+            widget.onInvisible!();
+          }
           _stop(true);
         } else if (_isDeactivate) {
           //visible restart streaming if needed
           _isDeactivate = false;
           _start();
+          if (widget.onVisible != null) {
+            widget.onVisible!();
+          }
         }
       },
       key: _visibilityKey,
@@ -325,8 +327,25 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     );
   }
 
+  bool shouldProcess() {
+    var shouldProcessInner = false;
+    // Process every 5th frame
+    if (_counter % 5 == 0) {
+      shouldProcessInner = true;
+    }
+
+    // Don't let counter go out of control forever
+    if (_counter == 1000) {
+      _counter = 0;
+    } else {
+      _counter++;
+    }
+
+    return shouldProcessInner;
+  }
+
   void _processImage(CameraImage cameraImage) async {
-    if (!_alreadyCheckingImage && mounted) {
+    if (!_alreadyCheckingImage && mounted && shouldProcess()) {
       _alreadyCheckingImage = true;
       try {
         final results = await _detect<T>(cameraImage, widget.detector, _rotation!);
@@ -344,13 +363,6 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     } else {
       start();
     }
-  }
-
-  Widget _getPicture() {
-    if (_lastImage != null) {
-      return Image.file(File(_lastImage!.path));
-    }
-    return Container();
   }
 
   Widget previewWrapper(Widget cameraPreview) {
