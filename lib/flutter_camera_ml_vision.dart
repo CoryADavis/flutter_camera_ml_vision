@@ -79,7 +79,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     _initialize();
   }
 
@@ -329,8 +329,8 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
 
   bool shouldProcess() {
     var shouldProcessInner = false;
-    // Process every 5th frame
-    if (_counter % 5 == 0) {
+    // Process every 2nd frame
+    if (_counter % 2 == 0) {
       shouldProcessInner = true;
     }
 
