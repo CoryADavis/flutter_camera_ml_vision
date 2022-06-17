@@ -15,8 +15,6 @@ dependencies:
     git:
       url: https://github.com/CoryADavis/flutter_google_ml_vision.git
       ref: barcode-only
-  firebase_core: ^1.14.0
-  visibility_detector: ^0.2.2
   path_provider: ^2.0.9
   pedantic: ^1.11.1
   device_info: ^2.0.3
