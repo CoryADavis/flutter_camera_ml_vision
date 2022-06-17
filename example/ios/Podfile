@@ -27,13 +27,6 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 
 flutter_ios_podfile_setup
 
-target 'Runner' do
-  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-# because of issue https://github.com/FirebaseExtended/flutterfire/issues/4625#issuecomment-821792539
-# need custom git version until it's done
-  pod 'FirebaseMLVisionBarcodeModel', '0.21', :source => 'git@github.com:rozdonmobile/CocoaPodsSpecs.git'
-end
-
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
