@@ -359,9 +359,11 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   }
 
   Widget _buildPreview(Widget cameraPreview) {
+    var cameraHeight = cameraController?.value.previewSize?.height ?? 720;
+    var cameraWidth = cameraController?.value.previewSize?.height ?? 1280;
     return FittedBox(
       fit: BoxFit.cover,
-      child: SizedBox(width: 720.0, height: 1280.0, child: cameraPreview),
+      child: SizedBox(width: cameraHeight, height: cameraWidth, child: cameraPreview),
     );
   }
 }
