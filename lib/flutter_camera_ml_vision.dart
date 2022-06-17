@@ -10,8 +10,6 @@ import 'package:device_info/device_info.dart';
 import 'package:google_ml_vision/google_ml_vision.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 export 'package:camera/camera.dart';
 
@@ -42,8 +40,6 @@ class CameraMlVision<T> extends StatefulWidget {
   final CameraLensDirection cameraLensDirection;
   final ResolutionPreset? resolution;
   final Function? onDispose;
-  final Function? onInvisible;
-  final Function? onVisible;
 
   CameraMlVision({
     Key? key,
@@ -55,8 +51,6 @@ class CameraMlVision<T> extends StatefulWidget {
     this.cameraLensDirection = CameraLensDirection.back,
     this.resolution,
     this.onDispose,
-    this.onInvisible,
-    this.onVisible,
   }) : super(key: key);
 
   @override
@@ -71,7 +65,6 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   CameraError _cameraError = CameraError.unknown;
   bool _alreadyCheckingImage = false;
   bool _isStreaming = false;
-  bool _isDeactivate = false;
 
   var _opacity = 0.0;
   var _counter = 0;
@@ -98,15 +91,9 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       return;
     }
     if (state == AppLifecycleState.inactive) {
-      if (widget.onInvisible != null) {
-        widget.onInvisible!();
-      }
       _cameraController?.dispose();
     } else if (state == AppLifecycleState.resumed && _isStreaming) {
       _initialize();
-      if (widget.onVisible != null) {
-        widget.onVisible!();
-      }
     }
   }
 
@@ -119,7 +106,9 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   Future<void> _stop(bool silently) {
     final completer = Completer();
     scheduleMicrotask(() async {
-      if (_cameraController?.value.isStreamingImages == true && mounted) {
+      if (_cameraController?.value.isStreamingImages == true &&
+          mounted &&
+          _cameraController?.value.isInitialized == true) {
         await _cameraController!.stopImageStream().catchError((_) {});
       }
 
@@ -142,7 +131,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   }
 
   void _start() {
-    if (_isStreaming != true) {
+    if (_isStreaming != true && mounted && _cameraController?.value.isInitialized == true) {
       _cameraController!.startImageStream(_processImage);
       setState(() {
         _isStreaming = true;
@@ -293,36 +282,15 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
 
   @override
   Widget build(BuildContext context) {
-    var cameraPreview = _isStreaming
+    var cameraPreview = _isStreaming && _cameraController?.value.isInitialized == true
         ? CameraPreview(
             _cameraController!,
           )
         : Container(color: Colors.black);
 
-    return VisibilityDetector(
-      onVisibilityChanged: (VisibilityInfo info) {
-        if ((info.visibleFraction * 100) <= 5) {
-          //invisible stop the streaming
-          _isDeactivate = true;
-          _cameraController!.setFlashMode(FlashMode.off);
-          if (widget.onInvisible != null) {
-            widget.onInvisible!();
-          }
-          _stop(true);
-        } else if (_isDeactivate) {
-          //visible restart streaming if needed
-          _isDeactivate = false;
-          _start();
-          if (widget.onVisible != null) {
-            widget.onVisible!();
-          }
-        }
-      },
-      key: _visibilityKey,
-      child: Container(
-        child: Center(
-          child: previewWrapper(cameraPreview),
-        ),
+    return Container(
+      child: Center(
+        child: previewWrapper(cameraPreview),
       ),
     );
   }
