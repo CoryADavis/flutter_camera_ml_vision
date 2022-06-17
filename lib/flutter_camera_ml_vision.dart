@@ -2,6 +2,7 @@ library flutter_camera_ml_vision;
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
@@ -40,6 +41,8 @@ class CameraMlVision<T> extends StatefulWidget {
   final CameraLensDirection cameraLensDirection;
   final ResolutionPreset? resolution;
   final Function? onDispose;
+  final double? width;
+  final double? height; 
 
   CameraMlVision({
     Key? key,
@@ -51,6 +54,8 @@ class CameraMlVision<T> extends StatefulWidget {
     this.cameraLensDirection = CameraLensDirection.back,
     this.resolution,
     this.onDispose,
+    this.width,
+    this.height,
   }) : super(key: key);
 
   @override
@@ -223,6 +228,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
 
     try {
       await _cameraController!.initialize();
+      await _cameraController!.lockCaptureOrientation();
     } catch (ex, stack) {
       debugPrint('Can\'t initialize camera');
       debugPrint('$ex, $stack');
@@ -344,7 +350,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
                 ? Center(child: Text('$_cameraMlVisionState $_cameraError'))
                 : widget.errorBuilder!(context, _cameraError)
             : Stack(
-                fit: StackFit.expand,
+                //fit: StackFit.expand,
                 children: [
                   (cameraController?.value.isInitialized ?? false) ? _buildPreview(cameraPreview) : Container(),
                   (cameraController?.value.isInitialized ?? false)
@@ -359,11 +365,22 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   }
 
   Widget _buildPreview(Widget cameraPreview) {
-    var cameraHeight = cameraController?.value.previewSize?.height ?? 720;
-    var cameraWidth = cameraController?.value.previewSize?.height ?? 1280;
-    return FittedBox(
-      fit: BoxFit.cover,
-      child: SizedBox(width: cameraHeight, height: cameraWidth, child: cameraPreview),
+    final widgetPreviewHeight = widget.height!;
+    final widgetPreviewWidth = widget.width!;
+    final tmp = cameraController!.value.previewSize!;
+    final previewH = max(tmp.height, tmp.width);
+    final previewW = min(tmp.height, tmp.width);
+    final screenRatio = widgetPreviewHeight / widgetPreviewWidth;
+    final previewRatio = previewH / previewW;
+
+    return OverflowBox(
+              maxHeight: screenRatio > previewRatio
+              ? widgetPreviewHeight
+              : widgetPreviewWidth / previewW * previewH,
+          maxWidth: screenRatio > previewRatio
+              ? widgetPreviewHeight / previewH * previewW
+              : widgetPreviewWidth,
+              child: cameraPreview,
     );
   }
 }
