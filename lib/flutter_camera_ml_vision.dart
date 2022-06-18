@@ -42,7 +42,7 @@ class CameraMlVision<T> extends StatefulWidget {
   final ResolutionPreset? resolution;
   final Function? onDispose;
   final double? width;
-  final double? height; 
+  final double? height;
 
   CameraMlVision({
     Key? key,
@@ -71,7 +71,6 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   bool _alreadyCheckingImage = false;
   bool _isStreaming = false;
 
-  var _opacity = 0.0;
   var _counter = 0;
 
   @override
@@ -255,8 +254,6 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     //FIXME hacky technique to avoid having black screen on some android devices
     if (Platform.isAndroid) {
       await Future.delayed(Duration(milliseconds: 50));
-    } else {
-      await Future.delayed(Duration(milliseconds: 50));
     }
     if (!mounted) {
       return;
@@ -280,10 +277,6 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    Future.delayed(const Duration(milliseconds: 60), () {
-      setState(() => _opacity = 1.0);
-    });
   }
 
   @override
@@ -342,25 +335,21 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   Widget previewWrapper(Widget cameraPreview) {
     return ColoredBox(
       color: Colors.black,
-      child: AnimatedOpacity(
-        opacity: _opacity,
-        duration: const Duration(milliseconds: 300),
-        child: _cameraMlVisionState == _CameraState.error
-            ? widget.errorBuilder == null
-                ? Center(child: Text('$_cameraMlVisionState $_cameraError'))
-                : widget.errorBuilder!(context, _cameraError)
-            : Stack(
-                //fit: StackFit.expand,
-                children: [
-                  (cameraController?.value.isInitialized ?? false) ? _buildPreview(cameraPreview) : Container(),
-                  (cameraController?.value.isInitialized ?? false)
-                      ? widget.overlayBuilder != null
-                          ? widget.overlayBuilder!(context)
-                          : Container()
-                      : Container(),
-                ],
-              ),
-      ),
+      child: _cameraMlVisionState == _CameraState.error
+          ? widget.errorBuilder == null
+              ? Center(child: Text('$_cameraMlVisionState $_cameraError'))
+              : widget.errorBuilder!(context, _cameraError)
+          : Stack(
+              //fit: StackFit.expand,
+              children: [
+                (cameraController?.value.isInitialized ?? false) ? _buildPreview(cameraPreview) : Container(),
+                (cameraController?.value.isInitialized ?? false)
+                    ? widget.overlayBuilder != null
+                        ? widget.overlayBuilder!(context)
+                        : Container()
+                    : Container(),
+              ],
+            ),
     );
   }
 
@@ -374,13 +363,9 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     final previewRatio = previewH / previewW;
 
     return OverflowBox(
-              maxHeight: screenRatio > previewRatio
-              ? widgetPreviewHeight
-              : widgetPreviewWidth / previewW * previewH,
-          maxWidth: screenRatio > previewRatio
-              ? widgetPreviewHeight / previewH * previewW
-              : widgetPreviewWidth,
-              child: cameraPreview,
+      maxHeight: screenRatio > previewRatio ? widgetPreviewHeight : widgetPreviewWidth / previewW * previewH,
+      maxWidth: screenRatio > previewRatio ? widgetPreviewHeight / previewH * previewW : widgetPreviewWidth,
+      child: cameraPreview,
     );
   }
 }
