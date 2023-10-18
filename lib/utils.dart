@@ -7,54 +7,52 @@ Future<CameraDescription?> _getCamera(CameraLensDirection dir) async {
 }
 
 Uint8List _concatenatePlanes(List<Plane> planes) {
-  final allBytes = WriteBuffer();
-  planes.forEach((plane) => allBytes.putUint8List(plane.bytes));
-  return allBytes.done().buffer.asUint8List();
+  // TODO: Remove once androidx enabled camera package actually supports NV21 return image format
+  if (Platform.isAndroid) {
+    final allBytes = WriteBuffer();
+    planes.forEach((plane) => allBytes.putUint8List(plane.bytes));
+    return allBytes.done().buffer.asUint8List();
+  } else {
+    // IOS image is already single plane
+    return planes.first.bytes;
+  }
 }
 
-GoogleVisionImageMetadata buildMetaData(
+InputImageMetadata buildMetaData(
   CameraImage image,
-  ImageRotation rotation,
+  InputImageRotation rotation,
 ) {
-  return GoogleVisionImageMetadata(
-    rawFormat: image.format.raw,
+  return InputImageMetadata(
+    format: InputImageFormatValue.fromRawValue(image.format.raw)!, // used only in iOS
     size: Size(image.width.toDouble(), image.height.toDouble()),
-    rotation: rotation,
-    planeData: image.planes
-        .map(
-          (plane) => GoogleVisionImagePlaneMetadata(
-            bytesPerRow: plane.bytesPerRow,
-            height: plane.height,
-            width: plane.width,
-          ),
-        )
-        .toList(),
+    rotation: rotation, // used only in Android
+    bytesPerRow: Platform.isIOS ? image.planes.first.bytesPerRow : 0, // used only in iOS
   );
 }
 
 Future<T> _detect<T>(
   CameraImage image,
   HandleDetection<T> handleDetection,
-  ImageRotation rotation,
+  InputImageRotation rotation,
 ) async {
   return handleDetection(
-    GoogleVisionImage.fromBytes(
-      _concatenatePlanes(image.planes),
-      buildMetaData(image, rotation),
+    InputImage.fromBytes(
+      bytes: _concatenatePlanes(image.planes),
+      metadata: buildMetaData(image, rotation),
     ),
   );
 }
 
-ImageRotation _rotationIntToImageRotation(int rotation) {
+InputImageRotation _rotationIntToImageRotation(int rotation) {
   switch (rotation) {
     case 0:
-      return ImageRotation.rotation0;
+      return InputImageRotation.rotation0deg;
     case 90:
-      return ImageRotation.rotation90;
+      return InputImageRotation.rotation90deg;
     case 180:
-      return ImageRotation.rotation180;
+      return InputImageRotation.rotation180deg;
     default:
       assert(rotation == 270);
-      return ImageRotation.rotation270;
+      return InputImageRotation.rotation270deg;
   }
 }

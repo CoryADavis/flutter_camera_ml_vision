@@ -1,8 +1,8 @@
 import 'dart:ui';
 
-import 'package:google_ml_vision/google_ml_vision.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_camera_ml_vision/flutter_camera_ml_vision.dart';
+import 'package:google_ml_vision/google_ml_vision.dart';
 
 void main() => runApp(MyApp());
 
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
@@ -54,8 +54,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 return;
               }
 
+              if (barcode.displayValue == null) {
+                return;
+              }
+
               setState(() {
-                data.add(barcode.displayValue);
+                data.add(barcode.displayValue!);
               });
             },
             child: Text('Scan product'),
@@ -99,7 +103,7 @@ class _ScanPageState extends State<ScanPage> {
             },
             detector: detector.detectInImage,
             onResult: (List<Barcode> barcodes) {
-              if (!mounted || resultSent || barcodes == null || barcodes.isEmpty) {
+              if (!mounted || resultSent || barcodes.isEmpty) {
                 return;
               }
               resultSent = true;
@@ -130,14 +134,14 @@ class _ScannerOverlayShape extends ShapeBorder {
   EdgeInsetsGeometry get dimensions => EdgeInsets.all(10.0);
 
   @override
-  Path getInnerPath(Rect rect, {TextDirection textDirection}) {
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
     return Path()
       ..fillType = PathFillType.evenOdd
       ..addPath(getOuterPath(rect), Offset.zero);
   }
 
   @override
-  Path getOuterPath(Rect rect, {TextDirection textDirection}) {
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
     Path _getLeftTopPath(Rect rect) {
       return Path()
         ..moveTo(rect.left, rect.bottom)
@@ -161,7 +165,7 @@ class _ScannerOverlayShape extends ShapeBorder {
   }
 
   @override
-  void paint(Canvas canvas, Rect rect, {TextDirection textDirection}) {
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
     const lineSize = 30;
 
     final width = rect.width;

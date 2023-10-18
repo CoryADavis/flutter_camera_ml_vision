@@ -3,26 +3,23 @@ library flutter_camera_ml_vision;
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
-import 'package:device_info/device_info.dart';
-import 'package:google_ml_vision/google_ml_vision.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 
 export 'package:camera/camera.dart';
 
 part 'utils.dart';
 
-typedef HandleDetection<T> = Future<T> Function(GoogleVisionImage image);
+typedef HandleDetection<T> = Future<T> Function(InputImage image);
 typedef ErrorWidgetBuilder = Widget Function(BuildContext context, CameraError error);
 
 enum CameraError {
   unknown,
   cantInitializeCamera,
-  androidVersionNotSupported,
   noCameraAvailable,
 }
 
@@ -63,9 +60,8 @@ class CameraMlVision<T> extends StatefulWidget {
 }
 
 class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindingObserver {
-  final _visibilityKey = UniqueKey();
   CameraController? _cameraController;
-  ImageRotation? _rotation;
+  InputImageRotation? _rotation;
   _CameraState _cameraMlVisionState = _CameraState.loading;
   CameraError _cameraError = CameraError.unknown;
   bool _alreadyCheckingImage = false;
@@ -145,7 +141,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
 
   CameraValue? get cameraValue => _cameraController?.value;
 
-  ImageRotation? get imageRotation => _rotation;
+  InputImageRotation? get imageRotation => _rotation;
 
   Future<void> Function() get prepareForVideoRecording => _cameraController!.prepareForVideoRecording;
 
@@ -191,21 +187,6 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   }
 
   Future<void> _initialize() async {
-    if (Platform.isAndroid) {
-      final deviceInfo = DeviceInfoPlugin();
-      final androidInfo = await deviceInfo.androidInfo;
-      if (androidInfo.version.sdkInt < 24) {
-        debugPrint('Camera plugin doesn\'t support android under version 24');
-        if (mounted) {
-          setState(() {
-            _cameraMlVisionState = _CameraState.error;
-            _cameraError = CameraError.androidVersionNotSupported;
-          });
-        }
-        return;
-      }
-    }
-
     final description = await _getCamera(widget.cameraLensDirection);
     if (description == null) {
       _cameraMlVisionState = _CameraState.error;
@@ -220,6 +201,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       description,
       widget.resolution ?? ResolutionPreset.high,
       enableAudio: false,
+      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
     );
     if (!mounted) {
       return;
@@ -227,7 +209,10 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
 
     try {
       await _cameraController!.initialize();
-      await _cameraController!.lockCaptureOrientation();
+      // TODO: lock orientation for Android once it's supported.
+      if (Platform.isIOS) {
+        await _cameraController!.lockCaptureOrientation();
+      }
     } catch (ex, stack) {
       debugPrint('Can\'t initialize camera');
       debugPrint('$ex, $stack');

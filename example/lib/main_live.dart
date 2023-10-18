@@ -1,6 +1,6 @@
-import 'package:google_ml_vision/google_ml_vision.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_camera_ml_vision/flutter_camera_ml_vision.dart';
+import 'package:google_ml_vision/google_ml_vision.dart';
 
 void main() => runApp(MyApp());
 
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
@@ -45,11 +45,15 @@ class _MyHomePageState extends State<MyHomePage> {
             detector: detector.detectInImage,
             resolution: ResolutionPreset.high,
             onResult: (barcodes) {
-              if (barcodes == null || barcodes.isEmpty || data.contains(barcodes.first.displayValue) || !mounted) {
+              if (barcodes.isEmpty || data.contains(barcodes.first.displayValue) || !mounted) {
+                return;
+              }
+
+              if (barcodes.first.displayValue == null) {
                 return;
               }
               setState(() {
-                data.add(barcodes.first.displayValue);
+                data.add(barcodes.first.displayValue!);
               });
             },
             onDispose: () {
@@ -84,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: <Widget>[
                     ElevatedButton(
                       onPressed: () {
-                        _scanKey.currentState.toggle();
+                        _scanKey.currentState?.toggle();
                       },
                       child: Text('Start/Pause camera'),
                     ),
