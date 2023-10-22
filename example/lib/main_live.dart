@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_camera_ml_vision/flutter_camera_ml_vision.dart';
-import 'package:google_ml_vision/google_ml_vision.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 
 void main() => runApp(MyApp());
 
@@ -29,7 +29,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<String> data = [];
   final _scanKey = GlobalKey<CameraMlVisionState>();
-  BarcodeDetector detector = GoogleVision.instance.barcodeDetector();
+  BarcodeScanner detector = BarcodeScanner();
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           CameraMlVision<List<Barcode>>(
             key: _scanKey,
-            detector: detector.detectInImage,
+            detector: detector.processImage,
             resolution: ResolutionPreset.high,
             onResult: (barcodes) {
               if (barcodes.isEmpty || data.contains(barcodes.first.displayValue) || !mounted) {
