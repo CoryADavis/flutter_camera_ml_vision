@@ -73,7 +73,22 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
     _initialize();
+  }
+
+  @override
+  void dispose() {
+    if (widget.onDispose != null) {
+      widget.onDispose!();
+    }
+
+    if (_cameraController != null) {
+      _cameraController?.dispose();
+    }
+
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
@@ -87,13 +102,23 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // App state changed before we got the chance to initialize.
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      return;
-    }
     if (state == AppLifecycleState.inactive) {
-      _cameraController?.dispose();
+      if (_cameraController == null || !_cameraController!.value.isInitialized) {
+        return;
+      }
+      _disposeCamera();
+      print('_isStreaming Value Is: $_isStreaming');
     } else if (state == AppLifecycleState.resumed && _isStreaming) {
       _initialize();
+    }
+  }
+
+  void _disposeCamera() {
+    final cameraController = _cameraController;
+    _cameraController = null;
+
+    if (cameraController != null) {
+      cameraController.dispose();
     }
   }
 
@@ -248,27 +273,16 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   }
 
   @override
-  void dispose() {
-    if (widget.onDispose != null) {
-      widget.onDispose!();
-    }
-    if (_cameraController != null) {
-      _cameraController?.dispose();
-    }
-
-    super.dispose();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
-    var cameraPreview = _isStreaming && _cameraController?.value.isInitialized == true
+    final cameraController = _cameraController;
+    var cameraPreview = _isStreaming && cameraController != null && cameraController.value.isInitialized == true
         ? CameraPreview(
-            _cameraController!,
+            cameraController,
           )
         : Container(color: Colors.black);
 
