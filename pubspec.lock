@@ -37,10 +37,10 @@ packages:
     dependency: "direct main"
     description:
       name: camera_android_camerax
-      sha256: e8cba4ae9fd0a54e757e1a7e41ba49116e6eb537e1679eae3f7d1ea57fe17e62
+      sha256: dfbee9678cfda95f5fdd17149a0ab6b69445f08a4efa69d251c851c24fd2e82e
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.0+19"
+    version: "0.5.0+22"
   camera_avfoundation:
     dependency: transitive
     description:
@@ -158,10 +158,10 @@ packages:
     dependency: "direct main"
     description:
       name: google_mlkit_commons
-      sha256: "42173a8ba89f386486cc5b8249e84da4a4b861daa70498373627d985eb418689"
+      sha256: "046586b381cdd139f7f6a05ad6998f7e339d061bd70158249907358394b5f496"
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.0"
+    version: "0.6.1"
   integration_test:
     dependency: transitive
     description: flutter
