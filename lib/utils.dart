@@ -7,11 +7,17 @@ Future<CameraDescription?> _getCamera(CameraLensDirection dir) async {
 }
 
 Uint8List _concatenatePlanes(List<Plane> planes) {
-  // TODO: Remove once androidx enabled camera package actually supports NV21 return image format
   if (Platform.isAndroid) {
-    final allBytes = WriteBuffer();
-    planes.forEach((plane) => allBytes.putUint8List(plane.bytes));
-    return allBytes.done().buffer.asUint8List();
+    // If Android actually returned a NV21 image, no processing is needed.
+    if (planes.length == 1) {
+      return planes.first.bytes;
+    } else {
+      final allBytes = WriteBuffer();
+      planes.forEach(
+        (plane) => allBytes.putUint8List(plane.bytes),
+      );
+      return allBytes.done().buffer.asUint8List();
+    }
   } else {
     // IOS image is already single plane
     return planes.first.bytes;
