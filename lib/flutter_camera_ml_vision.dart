@@ -134,7 +134,11 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       if (_cameraController?.value.isStreamingImages == true &&
           mounted &&
           _cameraController?.value.isInitialized == true) {
-        await _cameraController!.stopImageStream().catchError((_) {});
+        await _cameraController!.stopImageStream().catchError(
+          (e) {
+            debugPrint('$e');
+          },
+        );
       }
 
       if (silently) {
@@ -240,7 +244,8 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       description,
       widget.resolution ?? ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+      // Use nv21 for android_camera, and use yuv420 for android_camerax until it's supported
+      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.yuv420 : ImageFormatGroup.bgra8888,
     );
     if (!mounted) {
       return;

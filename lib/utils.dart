@@ -20,22 +20,60 @@ Future<CameraDescription?> _getCamera(CameraLensDirection dir) async {
   }
 }
 
-Uint8List _concatenatePlanes(List<Plane> planes) {
-  if (Platform.isAndroid) {
-    // If Android actually returned a NV21 image, no processing is needed.
-    if (planes.length == 1) {
-      return planes.first.bytes;
-    } else {
-      final allBytes = WriteBuffer();
-      planes.forEach(
-        (plane) => allBytes.putUint8List(plane.bytes),
-      );
-      return allBytes.done().buffer.asUint8List();
+void unpackPlane(Plane plane, Uint8List out, int offset, int pixelStride, int width, int height) {
+  Uint8List buffer = plane.bytes;
+  for (int row = 0; row < height; row++) {
+    int bufferPos = row * plane.bytesPerRow;
+    int outputPos = offset + row * width;
+    for (int col = 0; col < width; col += pixelStride) {
+      out[outputPos++] = buffer[bufferPos];
+      bufferPos += plane.bytesPerPixel!;
     }
-  } else {
+  }
+}
+
+void unpackUVPlanes(Plane uPlane, Plane vPlane, Uint8List out, int offset, int width, int height) {
+  Uint8List uBuffer = uPlane.bytes;
+  Uint8List vBuffer = vPlane.bytes;
+  int uvWidth = width ~/ 2;
+  int uvHeight = height ~/ 2;
+
+  for (int row = 0; row < uvHeight; row++) {
+    int uBufferPos = row * uPlane.bytesPerRow;
+    int vBufferPos = row * vPlane.bytesPerRow;
+    int outputPos = offset + row * uvWidth * 2;
+    for (int col = 0; col < uvWidth; col++) {
+      out[outputPos++] = vBuffer[vBufferPos];
+      out[outputPos++] = uBuffer[uBufferPos];
+      uBufferPos += uPlane.bytesPerPixel!;
+      vBufferPos += vPlane.bytesPerPixel!;
+    }
+  }
+}
+
+Uint8List _concatenatePlanes(List<Plane> planes, int height, int width) {
+  if (Platform.isIOS) {
     // IOS image is already single plane
     return planes.first.bytes;
   }
+
+  if (planes.length == 1) {
+    // Image may be an Android NV21 format image which also already has one plane
+    return planes.first.bytes;
+  }
+
+  // Now assuming Android YUV420 format which has 3 planes
+
+  int imageSize = width * height;
+  Uint8List nv21 = Uint8List(imageSize + imageSize ~/ 2);
+
+  // Unpack and copy Y plane.
+  unpackPlane(planes[0], nv21, 0, 1, width, height);
+
+  // Interleave U and V planes.
+  unpackUVPlanes(planes[1], planes[2], nv21, imageSize, width, height);
+
+  return nv21;
 }
 
 InputImageMetadata buildMetaData(
@@ -57,7 +95,11 @@ Future<T> _detect<T>(
 ) async {
   return handleDetection(
     InputImage.fromBytes(
-      bytes: _concatenatePlanes(image.planes),
+      bytes: _concatenatePlanes(
+        image.planes,
+        image.height,
+        image.width,
+      ),
       metadata: buildMetaData(image, rotation),
     ),
   );
