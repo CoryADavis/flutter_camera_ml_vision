@@ -211,6 +211,20 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     await _cameraController!.setExposurePoint(offset);
   }
 
+  Future<void> _lockAndFocus() async {
+    try {
+      // TODO: Use on Android once supported
+      if (Platform.isIOS) {
+        await _cameraController!.lockCaptureOrientation();
+        await _cameraController!.setExposureMode(ExposureMode.auto);
+        await _cameraController!.setFocusMode(FocusMode.auto);
+        await _cameraController!.setZoomLevel(1);
+      }
+    } catch (ex, stack) {
+      debugPrint('$ex, $stack');
+    }
+  }
+
   Future<void> _initialize() async {
     final description = await _getCamera(widget.cameraLensDirection);
     if (description == null) {
@@ -234,10 +248,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
 
     try {
       await _cameraController!.initialize();
-      // TODO: lock orientation for Android once it's supported.
-      if (Platform.isIOS) {
-        await _cameraController!.lockCaptureOrientation();
-      }
+      await _lockAndFocus();
     } catch (ex, stack) {
       debugPrint('Can\'t initialize camera');
       debugPrint('$ex, $stack');
