@@ -66,6 +66,12 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   CameraError _cameraError = CameraError.unknown;
   bool _alreadyCheckingImage = false;
   bool _isStreaming = false;
+  final ValueNotifier<(Widget, Size)> _cameraPreviewNotifier = ValueNotifier(
+    (
+      Container(color: Colors.black),
+      Size(0, 0),
+    ),
+  );
 
   var _counter = 0;
 
@@ -88,6 +94,7 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     }
 
     WidgetsBinding.instance.removeObserver(this);
+    _cameraPreviewNotifier.dispose();
     super.dispose();
   }
 
@@ -270,6 +277,10 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       return;
     }
 
+    if (_cameraController != null && _cameraController!.value.isInitialized) {
+      _cameraPreviewNotifier.value = (CameraPreview(_cameraController!), cameraController!.value.previewSize!);
+    }
+
     setState(() {
       _cameraMlVisionState = _CameraState.ready;
     });
@@ -295,17 +306,14 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
 
   @override
   Widget build(BuildContext context) {
-    final cameraController = _cameraController;
-    var cameraPreview = _isStreaming && cameraController != null && cameraController.value.isInitialized == true
-        ? CameraPreview(
-            cameraController,
-          )
-        : Container(color: Colors.black);
-
-    return Container(
-      child: Center(
-        child: previewWrapper(cameraPreview),
-      ),
+    return CameraPreviewWrapper(
+      cameraMlVisionState: _cameraMlVisionState,
+      cameraError: _cameraError,
+      cameraPreviewNotifier: _cameraPreviewNotifier,
+      errorBuilder: widget.errorBuilder,
+      overlayBuilder: widget.overlayBuilder,
+      height: widget.height ?? 0,
+      width: widget.width ?? 0,
     );
   }
 
@@ -346,41 +354,57 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
       start();
     }
   }
+}
 
-  Widget previewWrapper(Widget cameraPreview) {
+class CameraPreviewWrapper extends StatelessWidget {
+  final _CameraState cameraMlVisionState;
+  final CameraError cameraError;
+  final ErrorWidgetBuilder? errorBuilder;
+  final WidgetBuilder? overlayBuilder;
+  final ValueNotifier<(Widget, Size)> cameraPreviewNotifier;
+  final double height;
+  final double width;
+
+  const CameraPreviewWrapper({
+    Key? key,
+    required this.cameraMlVisionState,
+    required this.cameraError,
+    required this.cameraPreviewNotifier,
+    required this.height,
+    required this.width,
+    this.errorBuilder,
+    this.overlayBuilder,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return ColoredBox(
       color: Colors.black,
-      child: _cameraMlVisionState == _CameraState.error
-          ? widget.errorBuilder == null
-              ? Center(child: Text('$_cameraMlVisionState $_cameraError'))
-              : widget.errorBuilder!(context, _cameraError)
+      child: cameraMlVisionState == _CameraState.error
+          ? errorBuilder != null
+              ? errorBuilder!(context, cameraError)
+              : Center(child: Text('Error: $cameraMlVisionState $cameraError'))
           : Stack(
-              //fit: StackFit.expand,
               children: [
-                (cameraController?.value.isInitialized ?? false) ? _buildPreview(cameraPreview) : Container(),
-                (cameraController?.value.isInitialized ?? false)
-                    ? widget.overlayBuilder != null
-                        ? widget.overlayBuilder!(context)
-                        : Container()
-                    : Container(),
+                ValueListenableBuilder<(Widget, Size)>(
+                  valueListenable: cameraPreviewNotifier,
+                  builder: (context, cameraPreviewAndSize, child) {
+                    final cameraPreview = cameraPreviewAndSize.$1;
+                    final cameraPreviewSize = cameraPreviewAndSize.$2;
+                    final previewH = max(cameraPreviewSize.height, cameraPreviewSize.width);
+                    final previewW = min(cameraPreviewSize.height, cameraPreviewSize.width);
+                    final screenRatio = height / width;
+                    final previewRatio = previewH / previewW;
+                    return OverflowBox(
+                      maxHeight: screenRatio > previewRatio ? height : width / previewW * previewH,
+                      maxWidth: screenRatio > previewRatio ? height / previewH * previewW : width,
+                      child: cameraPreview,
+                    );
+                  },
+                ),
+                if (overlayBuilder != null) overlayBuilder!(context),
               ],
             ),
-    );
-  }
-
-  Widget _buildPreview(Widget cameraPreview) {
-    final widgetPreviewHeight = widget.height!;
-    final widgetPreviewWidth = widget.width!;
-    final tmp = cameraController!.value.previewSize!;
-    final previewH = max(tmp.height, tmp.width);
-    final previewW = min(tmp.height, tmp.width);
-    final screenRatio = widgetPreviewHeight / widgetPreviewWidth;
-    final previewRatio = previewH / previewW;
-
-    return OverflowBox(
-      maxHeight: screenRatio > previewRatio ? widgetPreviewHeight : widgetPreviewWidth / previewW * previewH,
-      maxWidth: screenRatio > previewRatio ? widgetPreviewHeight / previewH * previewW : widgetPreviewWidth,
-      child: cameraPreview,
     );
   }
 }

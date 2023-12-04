@@ -21,11 +21,11 @@ Future<CameraDescription?> _getCamera(CameraLensDirection dir) async {
 }
 
 void unpackPlane(Plane plane, Uint8List out, int offset, int pixelStride, int width, int height) {
-  Uint8List buffer = plane.bytes;
-  for (int row = 0; row < height; row++) {
-    int bufferPos = row * plane.bytesPerRow;
-    int outputPos = offset + row * width;
-    for (int col = 0; col < width; col += pixelStride) {
+  var buffer = plane.bytes;
+  for (var row = 0; row < height; row++) {
+    var bufferPos = row * plane.bytesPerRow;
+    var outputPos = offset + row * width;
+    for (var col = 0; col < width; col += pixelStride) {
       out[outputPos++] = buffer[bufferPos];
       bufferPos += plane.bytesPerPixel!;
     }
@@ -33,16 +33,16 @@ void unpackPlane(Plane plane, Uint8List out, int offset, int pixelStride, int wi
 }
 
 void unpackUVPlanes(Plane uPlane, Plane vPlane, Uint8List out, int offset, int width, int height) {
-  Uint8List uBuffer = uPlane.bytes;
-  Uint8List vBuffer = vPlane.bytes;
-  int uvWidth = width ~/ 2;
-  int uvHeight = height ~/ 2;
+  var uBuffer = uPlane.bytes;
+  var vBuffer = vPlane.bytes;
+  var uvWidth = width ~/ 2;
+  var uvHeight = height ~/ 2;
 
-  for (int row = 0; row < uvHeight; row++) {
-    int uBufferPos = row * uPlane.bytesPerRow;
-    int vBufferPos = row * vPlane.bytesPerRow;
-    int outputPos = offset + row * uvWidth * 2;
-    for (int col = 0; col < uvWidth; col++) {
+  for (var row = 0; row < uvHeight; row++) {
+    var uBufferPos = row * uPlane.bytesPerRow;
+    var vBufferPos = row * vPlane.bytesPerRow;
+    var outputPos = offset + row * uvWidth * 2;
+    for (var col = 0; col < uvWidth; col++) {
       out[outputPos++] = vBuffer[vBufferPos];
       out[outputPos++] = uBuffer[uBufferPos];
       uBufferPos += uPlane.bytesPerPixel!;
@@ -64,8 +64,8 @@ Uint8List _concatenatePlanes(List<Plane> planes, int height, int width) {
 
   // Now assuming Android YUV420 format which has 3 planes
 
-  int imageSize = width * height;
-  Uint8List nv21 = Uint8List(imageSize + imageSize ~/ 2);
+  var imageSize = width * height;
+  var nv21 = Uint8List(imageSize + imageSize ~/ 2);
 
   // Unpack and copy Y plane.
   unpackPlane(planes[0], nv21, 0, 1, width, height);
