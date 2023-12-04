@@ -378,6 +378,7 @@ class CameraPreviewWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenRatio = height / width;
     return ColoredBox(
       color: Colors.black,
       child: cameraMlVisionState == _CameraState.error
@@ -393,7 +394,6 @@ class CameraPreviewWrapper extends StatelessWidget {
                     final cameraPreviewSize = cameraPreviewAndSize.$2;
                     final previewH = max(cameraPreviewSize.height, cameraPreviewSize.width);
                     final previewW = min(cameraPreviewSize.height, cameraPreviewSize.width);
-                    final screenRatio = height / width;
                     final previewRatio = previewH / previewW;
                     return OverflowBox(
                       maxHeight: screenRatio > previewRatio ? height : width / previewW * previewH,
