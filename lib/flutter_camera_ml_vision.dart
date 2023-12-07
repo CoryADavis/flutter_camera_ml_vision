@@ -377,9 +377,21 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
     final screenRatio = widgetPreviewHeight / widgetPreviewWidth;
     final previewRatio = previewH / previewW;
 
+    final maxHeight = screenRatio > previewRatio
+        ? widgetPreviewHeight
+        : previewW != 0
+            ? (widgetPreviewWidth / previewW) * previewH
+            : 0.0;
+
+    final maxWidth = screenRatio > previewRatio
+        ? previewH != 0
+            ? (widgetPreviewHeight / previewH) * previewW
+            : 0.0
+        : widgetPreviewWidth;
+
     return OverflowBox(
-      maxHeight: screenRatio > previewRatio ? widgetPreviewHeight : widgetPreviewWidth / previewW * previewH,
-      maxWidth: screenRatio > previewRatio ? widgetPreviewHeight / previewH * previewW : widgetPreviewWidth,
+      maxHeight: maxHeight,
+      maxWidth: maxWidth,
       child: cameraPreview,
     );
   }
