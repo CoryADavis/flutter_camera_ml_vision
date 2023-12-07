@@ -395,9 +395,22 @@ class CameraPreviewWrapper extends StatelessWidget {
                     final previewH = max(cameraPreviewSize.height, cameraPreviewSize.width);
                     final previewW = min(cameraPreviewSize.height, cameraPreviewSize.width);
                     final previewRatio = previewH / previewW;
+
+                    final maxHeight = screenRatio > previewRatio
+                        ? height
+                        : previewW != 0
+                            ? (width / previewW) * previewH
+                            : 0.0;
+
+                    final maxWidth = screenRatio > previewRatio
+                        ? previewH != 0
+                            ? (height / previewH) * previewW
+                            : 0.0
+                        : width;
+
                     return OverflowBox(
-                      maxHeight: screenRatio > previewRatio ? height : width / previewW * previewH,
-                      maxWidth: screenRatio > previewRatio ? height / previewH * previewW : width,
+                      maxHeight: maxHeight,
+                      maxWidth: maxWidth,
                       child: cameraPreview,
                     );
                   },
