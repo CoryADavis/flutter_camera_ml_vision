@@ -225,8 +225,8 @@ class CameraMlVisionState<T> extends State<CameraMlVision<T>> with WidgetsBindin
   Future<void> _lockAndFocus() async {
     try {
       // TODO: Use on Android once supported
+      await _cameraController!.lockCaptureOrientation();
       if (Platform.isIOS) {
-        await _cameraController!.lockCaptureOrientation();
         await _cameraController!.setExposureMode(ExposureMode.auto);
         await _cameraController!.setFocusMode(FocusMode.auto);
         await _cameraController!.setZoomLevel(1);
