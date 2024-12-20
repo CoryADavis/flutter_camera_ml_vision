@@ -26,6 +26,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   flutter_camera_ml_vision:
     path: ../
+  google_mlkit_barcode_scanning:
 
 dev_dependencies:
   flutter_test:

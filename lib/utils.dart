@@ -81,8 +81,11 @@ InputImageMetadata buildMetaData(
   InputImageRotation rotation,
 ) {
   return InputImageMetadata(
-    format: InputImageFormatValue.fromRawValue(image.format.raw)!, // used only in iOS
-    size: Size(image.width.toDouble(), image.height.toDouble()),
+    format: Platform.isAndroid ? InputImageFormat.nv21 : InputImageFormatValue.fromRawValue(image.format.raw)!,
+    size: Size(
+      image.width.toDouble(),
+      image.height.toDouble(),
+    ),
     rotation: rotation, // used only in Android
     bytesPerRow: Platform.isIOS ? image.planes.first.bytesPerRow : 0, // used only in iOS
   );
